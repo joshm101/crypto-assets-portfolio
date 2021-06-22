@@ -93,3 +93,26 @@ describe('Transaction Form -- Trading Pair Select', () => {
     expect(changeEventObject.target.value).toBe(expectedPairOption);
   });
 });
+
+describe('Transaction Form -- Price Per Coin Input', () => {
+  // simple render test only -- anything more creeps into testing
+  // 3rd-party functionality
+  it('renders', () => {
+    const onChange = jest.fn();
+    const value = 32768.64;
+    const expectedLabel = 'Per coin';
+    const expectedPairTarget = 'USD';
+
+    render(
+      <TransactionForm.PricePerCoinInput
+        onChange={onChange}
+        value={value}
+        pairTarget={expectedPairTarget}
+      />
+    );
+
+    expect(screen.getByDisplayValue(value)).toBeInTheDocument();
+    expect(screen.getByText(expectedLabel)).toBeInTheDocument();
+    expect(screen.getByText(expectedPairTarget)).toBeInTheDocument();
+  });
+});
