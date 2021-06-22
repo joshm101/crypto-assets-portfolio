@@ -137,12 +137,34 @@ const FeeInput: FunctionComponent<FeeInputProps> = ({ onChange, value }) => {
   );
 };
 
+interface NotesInputProps {
+  onChange: (event: ChangeEvent<HTMLInputElement>) => {};
+  value: string;
+}
+
+const NotesInput: FunctionComponent<NotesInputProps> = ({
+  onChange,
+  value,
+}) => {
+  return (
+    <TextField
+      label="Notes"
+      value={value}
+      onChange={onChange}
+      name="notes"
+      id="notes"
+      multiline
+    />
+  );
+};
+
 const TransactionForm = {
   ExchangeSelect,
   TradingPairSelect,
   PricePerCoinInput,
   QuantityInput,
   FeeInput,
+  NotesInput,
 };
 
 export default TransactionForm;
