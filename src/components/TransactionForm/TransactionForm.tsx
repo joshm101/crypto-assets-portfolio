@@ -116,11 +116,33 @@ const QuantityInput: FunctionComponent<QuantityInputProps> = ({
   );
 };
 
+interface FeeInputProps {
+  onChange: (event: ChangeEvent<HTMLInputElement>) => {};
+  value: number;
+}
+
+const FeeInput: FunctionComponent<FeeInputProps> = ({ onChange, value }) => {
+  return (
+    <TextField
+      label="Fee"
+      value={value}
+      onChange={onChange}
+      name="fee"
+      id="fee"
+      InputProps={{
+        // todo: support multiple fee currencies
+        startAdornment: <InputAdornment position="start">$</InputAdornment>,
+      }}
+    />
+  );
+};
+
 const TransactionForm = {
   ExchangeSelect,
   TradingPairSelect,
   PricePerCoinInput,
   QuantityInput,
+  FeeInput,
 };
 
 export default TransactionForm;
