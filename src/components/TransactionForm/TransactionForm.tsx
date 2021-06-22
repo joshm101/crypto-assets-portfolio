@@ -36,8 +36,34 @@ const ExchangeSelect: FunctionComponent<ExchangeSelectProps> = ({
   );
 };
 
+interface TradingPairSelectProps {
+  onChange: (event: ChangeEvent<{ value: unknown }>) => {};
+  value: string;
+  pairs: string[];
+}
+
+const TradingPairSelect: FunctionComponent<TradingPairSelectProps> = ({
+  onChange,
+  value,
+  pairs,
+}) => {
+  return (
+    <FormControl>
+      <InputLabel>Trading pair</InputLabel>
+      <Select onChange={onChange} value={value}>
+        {pairs.map((pair) => (
+          <MenuItem key={pair} value={pair}>
+            {pair}
+          </MenuItem>
+        ))}
+      </Select>
+    </FormControl>
+  );
+};
+
 const TransactionForm = {
   ExchangeSelect,
+  TradingPairSelect,
 };
 
 export default TransactionForm;
