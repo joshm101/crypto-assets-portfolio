@@ -116,3 +116,26 @@ describe('Transaction Form -- Price Per Coin Input', () => {
     expect(screen.getByText(expectedPairTarget)).toBeInTheDocument();
   });
 });
+
+describe('Transaction Form -- Quantity Input', () => {
+  // simple render test only -- anything more creeps into testing
+  // 3rd-party functionality
+  it('renders', () => {
+    const onChange = jest.fn();
+    const value = 5;
+    const expectedLabel = 'Quantity';
+    const expectedCoinSymbol = 'BTC';
+
+    render(
+      <TransactionForm.QuantityInput
+        onChange={onChange}
+        value={value}
+        coin={expectedCoinSymbol}
+      />
+    );
+
+    expect(screen.getByDisplayValue(value)).toBeInTheDocument();
+    expect(screen.getByText(expectedLabel)).toBeInTheDocument();
+    expect(screen.getByText(expectedCoinSymbol)).toBeInTheDocument();
+  });
+});
