@@ -47,3 +47,49 @@ describe('Transaction Form -- Exchange Select', () => {
     expect(changeEventObject.target.value).toEqual(expectedExchangeOption.id);
   });
 });
+
+describe('Transaction Form -- Trading Pair Select', () => {
+  const pairs = ['BTC/USD', 'BTC/ETH', 'BTC/USDT'];
+
+  it('renders', () => {
+    const onChange = jest.fn();
+    const value = 'BTC/USD';
+
+    render(
+      <TransactionForm.TradingPairSelect
+        onChange={onChange}
+        value={value}
+        pairs={pairs}
+      />
+    );
+
+    expect(screen.getByText('Trading pair')).toBeInTheDocument();
+    expect(screen.getByText(value)).toBeInTheDocument();
+  });
+
+  it('allows selection of a trading pair', () => {
+    const onChange = jest.fn();
+    const value = 'BTC/USD';
+
+    render(
+      <TransactionForm.TradingPairSelect
+        onChange={onChange}
+        value={value}
+        pairs={pairs}
+      />
+    );
+
+    const expectedPairOption = pairs[1];
+
+    // material-ui's default select component responds to
+    // mousedown event, not click event
+    fireEvent.mouseDown(screen.getByRole('button'));
+
+    expect(screen.getByText(expectedPairOption)).toBeInTheDocument();
+    fireEvent.click(screen.getByText(expectedPairOption));
+
+    expect(onChange.mock.calls.length).toBe(1);
+    const changeEventObject = onChange.mock.calls[0][0];
+    expect(changeEventObject.target.value).toBe(expectedPairOption);
+  });
+});
