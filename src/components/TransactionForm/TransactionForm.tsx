@@ -91,10 +91,36 @@ const PricePerCoinInput: FunctionComponent<PricePerCoinInputProps> = ({
   );
 };
 
+interface QuantityInputProps {
+  onChange: (event: ChangeEvent<HTMLInputElement>) => {};
+  value: number;
+  coin: string;
+}
+
+const QuantityInput: FunctionComponent<QuantityInputProps> = ({
+  onChange,
+  value,
+  coin,
+}) => {
+  return (
+    <TextField
+      label="Quantity"
+      value={value}
+      onChange={onChange}
+      name="quantity"
+      id="quantity"
+      InputProps={{
+        endAdornment: <InputAdornment position="end">{coin}</InputAdornment>,
+      }}
+    />
+  );
+};
+
 const TransactionForm = {
   ExchangeSelect,
   TradingPairSelect,
   PricePerCoinInput,
+  QuantityInput,
 };
 
 export default TransactionForm;
