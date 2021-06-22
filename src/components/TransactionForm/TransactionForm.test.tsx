@@ -154,3 +154,18 @@ describe('Transaction Form -- Fee Input', () => {
     expect(screen.getByText(expectedLabel)).toBeInTheDocument();
   });
 });
+
+describe('Transaction Form -- Notes Input', () => {
+  // simple render test only -- anything more creeps into testing
+  // 3rd-party functionality
+  it('renders', () => {
+    const onChange = jest.fn();
+    const value = 'Bought on Coinbase';
+    const expectedLabel = 'Notes';
+
+    render(<TransactionForm.NotesInput onChange={onChange} value={value} />);
+
+    expect(screen.getByDisplayValue(value)).toBeInTheDocument();
+    expect(screen.getByText(expectedLabel)).toBeInTheDocument();
+  });
+});
