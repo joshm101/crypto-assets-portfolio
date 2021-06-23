@@ -12,6 +12,7 @@ enum TRANSACTION_TYPE {
 
 export interface Transaction {
   type: TRANSACTION_TYPE;
+  exchangeId: string;
   coin: string;
   pairTarget: string;
   pricePerCoin: number;
@@ -19,4 +20,11 @@ export interface Transaction {
   fee: number;
   date: Date;
   notes: string;
+}
+
+export interface ExchangePair {
+  exchange: string;
+  market: string;
+  base: string;
+  quote: string;
 }

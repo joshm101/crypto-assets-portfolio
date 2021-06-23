@@ -1,8 +1,11 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react-hooks';
 
-import TransactionForm from './TransactionForm';
+import TransactionForm, { useExchangePairs } from './TransactionForm';
+import { Errors, CryptoApi } from '../../api/crypto';
 import { SUPPORTED_EXCHANGES } from '../../constants';
+import { ExchangePair } from '../../types';
 
 describe('Transaction Form -- Exchange Select', () => {
   it('renders', () => {
@@ -167,5 +170,117 @@ describe('Transaction Form -- Notes Input', () => {
 
     expect(screen.getByDisplayValue(value)).toBeInTheDocument();
     expect(screen.getByText(expectedLabel)).toBeInTheDocument();
+  });
+});
+
+describe('useExchangePairs', () => {
+  const coin = 'BTC';
+  const exchangeId = 'binance';
+
+  const mockResponseData1: ExchangePair[] = [
+    { exchange: 'binance', market: 'BTCUSDT', base: coin, quote: 'USD' },
+    { exchange: 'binance', market: 'BTCETH', base: coin, quote: 'ETH' },
+  ];
+
+  const mockResponseData2: ExchangePair[] = [
+    { exchange: 'gdax', market: 'BTCUSD', base: coin, quote: 'USD' },
+  ];
+  it('retrieves trading pairs for a given coin & exchange', async () => {
+    const mockGetExchangeTradingPairs = (
+      pairBase: string,
+      exchangeId: string
+    ) => {
+      return new Promise<ExchangePair[]>((resolve) => {
+        setTimeout(() => {
+          resolve(mockResponseData1);
+        }, 0);
+      });
+    };
+    const mockCryptoApi: CryptoApi = {
+      getExchangeTradingPairs: mockGetExchangeTradingPairs,
+    };
+
+    const { result, waitForNextUpdate } = renderHook(() =>
+      useExchangePairs(coin, exchangeId, mockCryptoApi)
+    );
+
+    expect(result.current.pairs.length).toBe(0);
+    expect(result.current.retrievingPairs).toBe(true);
+    expect(result.current.exchangePairRetrievalError).toBe(null);
+
+    await waitForNextUpdate();
+    expect(result.current.pairs).toEqual(mockResponseData1);
+    expect(result.current.retrievingPairs).toBe(false);
+    expect(result.current.exchangePairRetrievalError).toBe(null);
+  });
+
+  it('sets expected error on pairs retrieval error', async () => {
+    const mockGetExchangeTradingPairs = (
+      pairBase: string,
+      exchangeId: string
+    ) => {
+      return new Promise<ExchangePair[]>(() => {
+        throw new Error(Errors.TradingPairsRetrieval);
+      });
+    };
+
+    const mockCryptoApi: CryptoApi = {
+      getExchangeTradingPairs: mockGetExchangeTradingPairs,
+    };
+
+    const { result, waitForNextUpdate } = renderHook(() =>
+      useExchangePairs(coin, exchangeId, mockCryptoApi)
+    );
+
+    expect(result.current.pairs.length).toBe(0);
+    expect(result.current.retrievingPairs).toBe(true);
+    expect(result.current.exchangePairRetrievalError).toBe(null);
+
+    await waitForNextUpdate();
+    expect(result.current.pairs).toEqual([]);
+    expect(result.current.retrievingPairs).toBe(false);
+    expect(result.current.exchangePairRetrievalError).toEqual(
+      Errors.TradingPairsRetrieval
+    );
+  });
+
+  it('retrieves updated set of exchange pairs when exchange is updated', async () => {
+    let dataIndex = 0;
+    const responses = [mockResponseData1, mockResponseData2];
+
+    const mockGetExchangeTradingPairs = (
+      pairBase: string,
+      exchangeId: string
+    ) => {
+      return new Promise<ExchangePair[]>((resolve) => {
+        setTimeout(() => {
+          resolve(responses[dataIndex]);
+          ++dataIndex;
+        }, 0);
+      });
+    };
+
+    const mockCryptoApi: CryptoApi = {
+      getExchangeTradingPairs: mockGetExchangeTradingPairs,
+    };
+
+    const { result, waitForNextUpdate } = renderHook(() =>
+      useExchangePairs(coin, exchangeId, mockCryptoApi)
+    );
+
+    await waitForNextUpdate();
+    expect(result.current.pairs).toEqual(mockResponseData1);
+    expect(result.current.retrievingPairs).toBe(false);
+    expect(result.current.exchangePairRetrievalError).toBe(null);
+
+    const updatedExchange = 'gdax';
+    act(() => result.current.setExchange(updatedExchange));
+
+    expect(result.current.retrievingPairs).toBe(true);
+
+    await waitForNextUpdate();
+    expect(result.current.pairs).toEqual(mockResponseData2);
+    expect(result.current.retrievingPairs).toBe(false);
+    expect(result.current.exchangePairRetrievalError).toBe(null);
   });
 });
