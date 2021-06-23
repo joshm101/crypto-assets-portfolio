@@ -1,4 +1,4 @@
-import { FunctionComponent, ChangeEvent } from 'react';
+import { FunctionComponent, ChangeEvent, useState, useEffect } from 'react';
 import FormControl from '@material-ui/core/FormControl';
 import InputLabel from '@material-ui/core/InputLabel';
 import Select from '@material-ui/core/Select';
@@ -6,7 +6,42 @@ import MenuItem from '@material-ui/core/MenuItem';
 import TextField from '@material-ui/core/TextField';
 import InputAdornment from '@material-ui/core/InputAdornment';
 
-import { Exchange } from '../../types';
+import { Exchange, ExchangePair } from '../../types';
+import { CryptoApi, Errors } from '../../api/crypto';
+
+const useExchangePairs = (
+  coinSymbol: string,
+  exchangeId: string,
+  cryptoApi: CryptoApi
+) => {
+  const [exchange, setExchange] = useState(exchangeId);
+  const [pairs, setExchangePairs] = useState<ExchangePair[]>([]);
+  const [retrievingPairs, setRetrievingPairs] = useState<boolean>(false);
+  const [exchangePairRetrievalError, setExchangePairRetrievalError] =
+    useState<Errors | null>(null);
+
+  const processPairsData = (exchangePairs: ExchangePair[]) => {
+    setExchangePairs(exchangePairs);
+    setRetrievingPairs(false);
+  };
+
+  const onPairsRetrievalError = (error: Error) => {
+    setRetrievingPairs(false);
+
+    const errorType = error.message as Errors;
+    setExchangePairRetrievalError(errorType);
+  };
+
+  useEffect(() => {
+    setRetrievingPairs(true);
+    cryptoApi
+      .getExchangeTradingPairs(coinSymbol, exchange)
+      .then(processPairsData)
+      .catch(onPairsRetrievalError);
+  }, [exchange, coinSymbol, cryptoApi]);
+
+  return { setExchange, pairs, retrievingPairs, exchangePairRetrievalError };
+};
 
 interface ExchangeSelectProps {
   onChange: (event: ChangeEvent<{ value: unknown }>) => {};
@@ -26,6 +61,7 @@ const ExchangeSelect: FunctionComponent<ExchangeSelectProps> = ({
         onChange={onChange}
         value={value}
         name="exchangeId"
+        id="exchangeId"
         data-test-id="exchange-select"
       >
         {exchanges.map((exchange) => (
@@ -168,3 +204,4 @@ const TransactionForm = {
 };
 
 export default TransactionForm;
+export { useExchangePairs };
