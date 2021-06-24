@@ -198,6 +198,7 @@ describe('useExchangePairs', () => {
     };
     const mockCryptoApi: CryptoApi = {
       getExchangeTradingPairs: mockGetExchangeTradingPairs,
+      getExchangeListings: () => Promise.resolve([]),
     };
 
     const { result, waitForNextUpdate } = renderHook(() =>
@@ -226,6 +227,7 @@ describe('useExchangePairs', () => {
 
     const mockCryptoApi: CryptoApi = {
       getExchangeTradingPairs: mockGetExchangeTradingPairs,
+      getExchangeListings: () => Promise.resolve([]),
     };
 
     const { result, waitForNextUpdate } = renderHook(() =>
@@ -262,6 +264,7 @@ describe('useExchangePairs', () => {
 
     const mockCryptoApi: CryptoApi = {
       getExchangeTradingPairs: mockGetExchangeTradingPairs,
+      getExchangeListings: () => Promise.resolve([]),
     };
 
     const { result, waitForNextUpdate } = renderHook(() =>

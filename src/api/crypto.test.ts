@@ -1,4 +1,5 @@
 import crypto, { Errors } from './crypto';
+import { Exchange } from '../types';
 
 import fetchMock from 'jest-fetch-mock';
 
@@ -39,5 +40,61 @@ describe('Crypto API -- get exchange trading pairs', () => {
     await expect(
       getExchangeTradingPairs(pairBase, exchangeId)
     ).rejects.toThrowError(expectedError);
+  });
+});
+
+describe('Crypto API -- get exchange listings', () => {
+  beforeEach(() => {
+    fetchMock.resetMocks();
+  });
+
+  const mockData = [
+    { exchange: 'binance', market: 'BTCUSDT', base: 'BTC', quote: 'USDT' },
+    { exchange: 'gdax', market: 'BTCUSD', base: 'BTC', quote: 'USD' },
+    { exchange: 'okex', market: 'BTCUSDT', base: 'BTC', quote: 'USDT' },
+  ];
+
+  it('retrieves supported exchange listings for a coin', async () => {
+    fetchMock.mockResponseOnce(JSON.stringify(mockData));
+    const { getExchangeListings } = crypto;
+
+    const pairBase = 'BTC';
+    const exchangeListingsData = await getExchangeListings(pairBase);
+
+    const expectedResult: Exchange[] = [
+      {
+        id: 'binance',
+        name: 'Binance',
+        logoUrl:
+          'https://s3.us-east-2.amazonaws.com/nomics-api/static/images/exchanges/binance.svg',
+        websiteUrl: 'https://www.binance.com/',
+      },
+      {
+        id: 'gdax',
+        name: 'Coinbase',
+        logoUrl:
+          'https://s3.us-east-2.amazonaws.com/nomics-api/static/images/exchanges/gdax.png',
+        websiteUrl: 'https://pro.coinbase.com/',
+      },
+    ];
+
+    expect(exchangeListingsData).toEqual(expectedResult);
+  });
+
+  it('throws correct error on exchange listings retrieval error', async () => {
+    const pairBase = 'BTC';
+    const { getExchangeListings } = crypto;
+
+    fetchMock.mockImplementationOnce(() => {
+      return new Promise(() => {
+        throw new Error(Errors.ExchangeListingsRetrieval);
+      });
+    });
+
+    const expectedError = new Error(Errors.ExchangeListingsRetrieval);
+
+    await expect(getExchangeListings(pairBase)).rejects.toThrowError(
+      expectedError
+    );
   });
 });
