@@ -2,10 +2,13 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { renderHook, act } from '@testing-library/react-hooks';
 
-import TransactionForm, { useExchangePairs } from './TransactionForm';
+import TransactionForm, {
+  useExchangePairs,
+  useExchangeListings,
+} from './TransactionForm';
 import { Errors, CryptoApi } from '../../api/crypto';
 import { SUPPORTED_EXCHANGES } from '../../constants';
-import { ExchangePair } from '../../types';
+import { ExchangePair, Exchange } from '../../types';
 
 describe('Transaction Form -- Exchange Select', () => {
   it('renders', () => {
@@ -285,5 +288,145 @@ describe('useExchangePairs', () => {
     expect(result.current.pairs).toEqual(mockResponseData2);
     expect(result.current.retrievingPairs).toBe(false);
     expect(result.current.exchangePairRetrievalError).toBe(null);
+  });
+});
+
+describe('useExchangeListings', () => {
+  const coin1 = 'ICX';
+  const coin2 = 'ETH';
+
+  const mockResultData1 = [
+    {
+      id: 'binance',
+      name: 'Binance',
+      logoUrl:
+        'https://s3.us-east-2.amazonaws.com/nomics-api/static/images/exchanges/binance.svg',
+      websiteUrl: 'https://www.binance.com/',
+    },
+    {
+      id: 'binance_us',
+      name: 'Binance US',
+      logoUrl:
+        'https://s3.us-east-2.amazonaws.com/nomics-api/static/images/exchanges/binance_us.png',
+      websiteUrl: 'https://www.binance.us/en',
+    },
+  ];
+
+  const mockResultData2 = [
+    {
+      id: 'gdax',
+      name: 'Coinbase',
+      logoUrl:
+        'https://s3.us-east-2.amazonaws.com/nomics-api/static/images/exchanges/gdax.png',
+      websiteUrl: 'https://pro.coinbase.com/',
+    },
+    {
+      id: 'binance',
+      name: 'Binance',
+      logoUrl:
+        'https://s3.us-east-2.amazonaws.com/nomics-api/static/images/exchanges/binance.svg',
+      websiteUrl: 'https://www.binance.com/',
+    },
+  ];
+
+  it('retrieves list of exchange listings for a coin', async () => {
+    const mockGetExchangeListings = (pairBase: string): Promise<Exchange[]> => {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          resolve(mockResultData1);
+        }, 0);
+      });
+    };
+
+    const mockCryptoApi: CryptoApi = {
+      getExchangeTradingPairs: (pairBase: string, exchangeId: string) =>
+        Promise.resolve([]),
+      getExchangeListings: mockGetExchangeListings,
+    };
+
+    const { result, waitForNextUpdate } = renderHook(() =>
+      useExchangeListings(coin1, mockCryptoApi)
+    );
+
+    expect(result.current.retrievingExchangeListings).toBe(true);
+
+    await waitForNextUpdate();
+
+    expect(result.current.exchangeListings).toEqual(mockResultData1);
+    expect(result.current.retrievingExchangeListings).toBe(false);
+    expect(result.current.exchangeListingsRetrievalError).toBe(null);
+  });
+
+  it('sets expected error on exchange listings retrieval error', async () => {
+    const mockGetExchangeListings = (pairBase: string): Promise<Exchange[]> => {
+      return new Promise(() => {
+        throw new Error(Errors.ExchangeListingsRetrieval);
+      });
+    };
+
+    const mockCryptoApi: CryptoApi = {
+      getExchangeTradingPairs: (pairBase: string, exchangeId: string) =>
+        Promise.resolve([]),
+      getExchangeListings: mockGetExchangeListings,
+    };
+
+    const { result, waitForNextUpdate } = renderHook(() =>
+      useExchangeListings(coin1, mockCryptoApi)
+    );
+
+    expect(result.current.exchangeListings).toEqual([]);
+    expect(result.current.retrievingExchangeListings).toBe(true);
+    expect(result.current.exchangeListingsRetrievalError).toBe(null);
+
+    await waitForNextUpdate();
+
+    expect(result.current.exchangeListings).toEqual([]);
+    expect(result.current.retrievingExchangeListings).toBe(false);
+    expect(result.current.exchangeListingsRetrievalError).toBe(
+      Errors.ExchangeListingsRetrieval
+    );
+  });
+
+  it('retrieves updated list of exchange listings when coin is updated', async () => {
+    let dataIndex = 0;
+
+    const mockResults = [mockResultData1, mockResultData2];
+
+    const mockGetExchangeListings = (pairBase: string): Promise<Exchange[]> => {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          resolve(mockResults[dataIndex]);
+
+          ++dataIndex;
+        }, 0);
+      });
+    };
+
+    const mockCryptoApi: CryptoApi = {
+      getExchangeTradingPairs: (pairBase: string, exchangeId: string) =>
+        Promise.resolve([]),
+      getExchangeListings: mockGetExchangeListings,
+    };
+
+    const { result, waitForNextUpdate } = renderHook(() =>
+      useExchangeListings(coin1, mockCryptoApi)
+    );
+
+    expect(result.current.exchangeListings).toEqual([]);
+    expect(result.current.retrievingExchangeListings).toBe(true);
+
+    await waitForNextUpdate();
+
+    expect(result.current.exchangeListings).toEqual(mockResultData1);
+    expect(result.current.retrievingExchangeListings).toBe(false);
+
+    act(() => result.current.setCoin(coin2));
+
+    expect(result.current.retrievingExchangeListings).toBe(true);
+
+    await waitForNextUpdate();
+
+    expect(result.current.exchangeListings).toEqual(mockResultData2);
+    expect(result.current.retrievingExchangeListings).toBe(false);
   });
 });

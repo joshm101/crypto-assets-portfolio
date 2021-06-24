@@ -43,6 +43,43 @@ const useExchangePairs = (
   return { setExchange, pairs, retrievingPairs, exchangePairRetrievalError };
 };
 
+const useExchangeListings = (coinSymbol: string, cryptoApi: CryptoApi) => {
+  const [coin, setCoin] = useState(coinSymbol);
+  const [exchangeListings, setExchangeListings] = useState<Exchange[]>([]);
+  const [retrievingExchangeListings, setRetrievingExchangeListings] =
+    useState<boolean>(false);
+  const [exchangeListingsRetrievalError, setExchangeListingsRetrievalError] =
+    useState<Errors | null>(null);
+
+  const processExchangeListingsData = (exchangeListings: Exchange[]) => {
+    setRetrievingExchangeListings(false);
+    setExchangeListings(exchangeListings);
+  };
+
+  const onExchangeListingsRetrievalError = (error: Error) => {
+    setRetrievingExchangeListings(false);
+
+    const errorType = error.message as Errors;
+    setExchangeListingsRetrievalError(errorType);
+  };
+
+  useEffect(() => {
+    setRetrievingExchangeListings(true);
+
+    cryptoApi
+      .getExchangeListings(coin)
+      .then(processExchangeListingsData)
+      .catch(onExchangeListingsRetrievalError);
+  }, [coin, cryptoApi]);
+
+  return {
+    setCoin,
+    exchangeListings,
+    retrievingExchangeListings,
+    exchangeListingsRetrievalError,
+  };
+};
+
 interface ExchangeSelectProps {
   onChange: (event: ChangeEvent<{ value: unknown }>) => {};
   value: string;
@@ -204,4 +241,4 @@ const TransactionForm = {
 };
 
 export default TransactionForm;
-export { useExchangePairs };
+export { useExchangePairs, useExchangeListings };
